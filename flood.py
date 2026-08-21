@@ -12,15 +12,12 @@ try:
 except ImportError:
     pass
 
-# ================== SABİT ==================
 TARGET = "https://vgc.wtf"
 TOTAL_REQUESTS = 100000
 CONCURRENT = 2000
 METHOD = "GET"
 TIMEOUT = 6
 PROCESSES = max(2, cpu_count() // 2)
-# ===========================================
-
 ua = UserAgent()
 
 ACCEPTS = [
