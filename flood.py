@@ -1,7 +1,3 @@
-# language: Python 3.10+, file: flood.py
-# Linux: pip install aiohttp uvloop fake-useragent
-# çalıştır: python flood.py
-
 import asyncio
 import aiohttp
 import random
