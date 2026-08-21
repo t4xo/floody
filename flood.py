@@ -79,7 +79,7 @@ QUERIES = [
 ]
 
 def random_ip():
-    return f"{random.randint(1,223)}.{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(1,254)}"
+    return {random.randint(1,223)}.{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(1,254)}
 
 def random_headers():
     ip = random_ip()
